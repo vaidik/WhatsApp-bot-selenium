@@ -10,6 +10,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
+from selenium.webdriver.firefox.options import Options
+
+options = Options()
+options.headless = True
+
+
 import datetime
 import time
 import openpyxl as excel
@@ -43,7 +49,7 @@ targets = readContacts("/Users/vaidik.kapoor/Downloads/contacts.xlsx")
 print(targets)
 
 # Driver to open a browser
-driver = webdriver.Firefox()
+driver = webdriver.Firefox(options=options)
 
 #link to open a site
 driver.get("https://web.whatsapp.com/")
@@ -53,6 +59,23 @@ driver.get("https://web.whatsapp.com/")
 # note this time is being used below also
 wait = WebDriverWait(driver, 10)
 wait5 = WebDriverWait(driver, 5)
+
+driver.save_screenshot('qr_code.png')
+
+# send screenshot by message
+PB_ACCESS_TOKEN = 'o.lJia6fBUoRjvo9DeJcSQSk5qoayq7Lj5'
+from pushbullet import Pushbullet
+
+pb = Pushbullet(PB_ACCESS_TOKEN)
+
+with open("qr_code.png", "rb") as pic:
+    file_data = pb.upload_file(pic, "watsapp_web_qr_code.png")
+
+push = pb.push_file(**file_data)
+import pdb; pdb.set_trace()
+
+# wait for approval
+
 input("Scan the QR code and then press Enter")
 
 # Message to send list
