@@ -13,7 +13,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.firefox.options import Options
 
 options = Options()
-options.headless = True
+#options.headless = True
 
 
 import datetime
@@ -59,11 +59,13 @@ driver.get("https://web.whatsapp.com/")
 # note this time is being used below also
 wait = WebDriverWait(driver, 10)
 wait5 = WebDriverWait(driver, 5)
+wait60 = WebDriverWait(driver, 70)
 
 driver.save_screenshot('qr_code.png')
 
 # send screenshot by message
-PB_ACCESS_TOKEN = 'o.lJia6fBUoRjvo9DeJcSQSk5qoayq7Lj5'
+import os
+PB_ACCESS_TOKEN = os.environ['PB_ACCESS_TOKEN']
 from pushbullet import Pushbullet
 
 pb = Pushbullet(PB_ACCESS_TOKEN)
@@ -72,11 +74,16 @@ with open("qr_code.png", "rb") as pic:
     file_data = pb.upload_file(pic, "watsapp_web_qr_code.png")
 
 push = pb.push_file(**file_data)
-import pdb; pdb.set_trace()
 
-# wait for approval
+pb.push_note('You have 60 seconds to login to whatsapp web', 'Find bhaia quickly')
 
-input("Scan the QR code and then press Enter")
+# wait for login
+wait60.until(EC.presence_of_element_located((
+    By.CSS_SELECTOR, '.copyable-text.selectable-text'
+)))
+print('Logged In')
+
+# input("Scan the QR code and then press Enter")
 
 # Message to send list
 # 1st Parameter: Hours in 0-23
@@ -113,8 +120,6 @@ msgToSend = [
 # Count variable to identify the number of messages to be sent
 count = 0
 while count<len(msgToSend):
-    print ('something')
-
     # Identify time
     curTime = datetime.datetime.now()
     curHour = curTime.time().hour
@@ -202,5 +207,16 @@ while count<len(msgToSend):
         print("Failed to Sent to: ", len(failList))
         print(failList)
         print('\n\n')
+
+        title = 'Successfully sent all messages'
+        if len(failList) > 0:
+            title = 'Failed to send all messages'
+
+        body = '''
+Successfully sent to: %s
+Failed to send to: %s
+%s
+''' % (success, len(failList), failList)
+        pb.push_note(title, body)
         count+=1
 driver.quit()
