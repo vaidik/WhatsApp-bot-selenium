@@ -38,7 +38,7 @@ def readContacts(fileName):
 
 # Target Contacts, keep them in double colons
 # Not tested on Broadcast
-targets = readContacts("/Users/vaidik.kapoor/Downloads/contacts.xlsx")
+targets = readContacts("contacts.xlsx")
 
 # can comment out below line
 #targets = [
