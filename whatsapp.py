@@ -8,6 +8,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+
 import datetime
 import time
 import openpyxl as excel
@@ -18,17 +20,26 @@ def readContacts(fileName):
     file = excel.load_workbook(fileName)
     sheet = file.active
     firstCol = sheet['A']
+    secondCol = sheet['B']
     for cell in range(len(firstCol)):
+        if firstCol[cell].value is None:
+            continue
         contact = str(firstCol[cell].value)
         contact = "\"" + contact + "\""
-        lst.append(contact)
+        detail = str(secondCol[cell].value)
+        lst.append((contact, detail))
     return lst
 
 # Target Contacts, keep them in double colons
 # Not tested on Broadcast
-targets = readContacts("contacts.xlsx")
+targets = readContacts("/Users/vaidik.kapoor/Downloads/contacts.xlsx")
 
 # can comment out below line
+#targets = [
+#    '"Vaibhav Kapoor"',
+#    '"Isha Bhabhi"'
+#]
+
 print(targets)
 
 # Driver to open a browser
@@ -53,13 +64,32 @@ input("Scan the QR code and then press Enter")
 # Else uncomment Keys.Enter in the last step if you dont want to use '\n'
 # Keep a nice gap between successive messages
 # Use Keys.SHIFT + Keys.ENTER to give a new line effect in your Message
+
+new_line = lambda x: (Keys.SHIFT + Keys.ENTER) * x
+
+MAIN_MESSAGE = '''Good Morning!
+
+To avoid any hassles during boarding the train and for a comfortable train journey from Varanasi to Delhi please see below your seat details:
+
+%s
+
+We will try our best to make the train journey comfortable for everyone but are restricted by seats allotted to us by Indian Railways. Wherever possible elders and women have been prioritised for easy access seats.
+
+Look forward to seeing you at Maduahdih Railway station at 6:30 PM.
+
+Thanks,
+Rinku'''
+
 msgToSend = [
-                [12, 32, 0, "Hello! This is test Msg. Please Ignore." + Keys.SHIFT + Keys.ENTER + "http://bit.ly/mogjm05"]
-            ]
+    [1, 1, 0, MAIN_MESSAGE]
+]
+                #[12, 32, 0, "Hello! This is test Msg. Please Ignore." + Keys.SHIFT + Keys.ENTER + "http://bit.ly/mogjm05"]
+            #]
 
 # Count variable to identify the number of messages to be sent
 count = 0
 while count<len(msgToSend):
+    print ('something')
 
     # Identify time
     curTime = datetime.datetime.now()
@@ -68,7 +98,8 @@ while count<len(msgToSend):
     curSec = curTime.time().second
 
     # if time matches then move further
-    if msgToSend[count][0]==curHour and msgToSend[count][1]==curMin and msgToSend[count][2]==curSec:
+    #if msgToSend[count][0]==curHour and msgToSend[count][1]==curMin and msgToSend[count][2]==curSec:
+    if True:
         # utility variables to tract count of success and fails
         success = 0
         sNo = 1
@@ -76,28 +107,31 @@ while count<len(msgToSend):
 
         # Iterate over selected contacts
         for target in targets:
-            print(sNo, ". Target is: " + target)
+            print(sNo, ". Target is: " + target[0])
+            print (target)
             sNo+=1
             try:
                 # Select the target
-                x_arg = '//span[contains(@title,' + target + ')]'
+                x_arg = '//span[contains(@title,' + target[0] + ')]'
                 try:
                     wait5.until(EC.presence_of_element_located((
                         By.XPATH, x_arg
                     )))
-                except:
+                except Exception as e:
+                    print(e)
                     # If contact not found, then search for it
                     searBoxPath = '//*[@id="input-chatlist-search"]'
-                    wait5.until(EC.presence_of_element_located((
-                        By.ID, "input-chatlist-search"
-                    )))
-                    inputSearchBox = driver.find_element_by_id("input-chatlist-search")
+                    #wait5.until(EC.presence_of_element_located((
+                    #    By.ID, "input-chatlist-search"
+                    #)))
+                    print("Searching selector")
+                    inputSearchBox = driver.find_element_by_css_selector(".copyable-text.selectable-text")
                     time.sleep(0.5)
                     # click the search button
-                    driver.find_element_by_xpath('/html/body/div/div/div/div[2]/div/div[2]/div/button').click()
+                    #driver.find_element_by_xpath('/html/body/div/div/div/div[2]/div/div[2]/div/button').click()
                     time.sleep(1)
                     inputSearchBox.clear()
-                    inputSearchBox.send_keys(target[1:len(target) - 1])
+                    inputSearchBox.send_keys(target[0][1:len(target[0]) - 1])
                     print('Target Searched')
                     # Increase the time if searching a contact is taking a long time
                     time.sleep(4)
@@ -115,18 +149,25 @@ while count<len(msgToSend):
 
                 # Send message
                 # taeget is your target Name and msgToSend is you message
-                input_box.send_keys("Hello, " + target + "."+ Keys.SHIFT + Keys.ENTER + msgToSend[count][3] + Keys.SPACE) # + Keys.ENTER (Uncomment it if your msg doesnt contain '\n')
+                #input_box.send_keys("Hello, " + target[0] + "."+ Keys.SHIFT + Keys.ENTER + msgToSend[count][3] + Keys.SPACE)
+                for part in (msgToSend[count][3] % target[1]).split('\n'):
+                    input_box.send_keys(part)
+                    ActionChains(driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
+
+                #input_box.send_keys(msgToSend[count][3].lower() % target[1])
+                # + Keys.ENTER (Uncomment it if your msg doesnt contain '\n')
                 # Link Preview Time, Reduce this time, if internet connection is Good
                 time.sleep(10)
                 input_box.send_keys(Keys.ENTER)
-                print("Successfully Send Message to : "+ target + '\n')
+                print("Successfully Send Message to : "+ target[0] + '\n')
                 success+=1
                 time.sleep(0.5)
 
-            except:
+            except Exception as e:
+                print("Exception", e)
                 # If target Not found Add it to the failed List
-                print("Cannot find Target: " + target)
-                failList.append(target)
+                print("Cannot find Target: " + target[0])
+                failList.append(target[0])
                 pass
 
         print("\nSuccessfully Sent to: ", success)
