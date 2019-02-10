@@ -59,7 +59,7 @@ driver.get("https://web.whatsapp.com/")
 # note this time is being used below also
 wait = WebDriverWait(driver, 10)
 wait5 = WebDriverWait(driver, 5)
-wait60 = WebDriverWait(driver, 70)
+wait70 = WebDriverWait(driver, 70)
 
 driver.save_screenshot('qr_code.png')
 
@@ -77,9 +77,11 @@ push = pb.push_file(**file_data)
 
 pb.push_note('You have 60 seconds to login to whatsapp web', 'Find bhaia quickly')
 
+print('waiting')
+
 # wait for login
-wait60.until(EC.presence_of_element_located((
-    By.CSS_SELECTOR, '.copyable-text.selectable-text'
+wait70.until(EC.presence_of_element_located((
+    By.CSS_SELECTOR, 'input.copyable-text.selectable-text'
 )))
 print('Logged In')
 
