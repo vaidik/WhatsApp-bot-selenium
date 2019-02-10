@@ -69,16 +69,17 @@ new_line = lambda x: (Keys.SHIFT + Keys.ENTER) * x
 
 MAIN_MESSAGE = '''Good Morning!
 
-To avoid any hassles during boarding the train and for a comfortable train journey from Varanasi to Delhi please see below your seat details:
+To avoid any hassles at the station and for a comfortable train journey from Varanasi to Delhi please see below your seat details:
 
 %s
 
 We will try our best to make the train journey comfortable for everyone but are restricted by seats allotted to us by Indian Railways. Wherever possible elders and women have been prioritised for easy access seats.
 
-Look forward to seeing you at Maduahdih Railway station at 6:30 PM.
+Look forward to seeing you at Maduahdih Railway Station (Platform No. 8) at 6:00 PM.
 
 Thanks,
-Rinku'''
+Kapoor & Sons.
+(Isha, Vibhu & Rinku)'''
 
 msgToSend = [
     [1, 1, 0, MAIN_MESSAGE]
@@ -126,6 +127,8 @@ while count<len(msgToSend):
                     #)))
                     print("Searching selector")
                     inputSearchBox = driver.find_element_by_css_selector(".copyable-text.selectable-text")
+                    #inputSearchBox = driver.find_element_by_css_selector(
+                    #    "span[title=%s]" % target[0])
                     time.sleep(0.5)
                     # click the search button
                     #driver.find_element_by_xpath('/html/body/div/div/div/div[2]/div/div[2]/div/button').click()
@@ -137,7 +140,9 @@ while count<len(msgToSend):
                     time.sleep(4)
 
                 # Select the target
-                driver.find_element_by_xpath(x_arg).click()
+                inputSearchBox = driver.find_element_by_css_selector(
+                    "span[title=%s i]" % target[0]).click()
+                #driver.find_element_by_xpath(x_arg).click()
                 print("Target Successfully Selected")
                 time.sleep(2)
 
