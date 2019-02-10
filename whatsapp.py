@@ -13,7 +13,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.firefox.options import Options
 
 options = Options()
-#options.headless = True
+options.headless = True
 
 
 import datetime
